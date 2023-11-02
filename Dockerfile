@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y curl file
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH=$PATH:/root/.cargo/bin
 ENV GOOGLE_APPLICATION_CREDENTIALS=gcp_credentials.json
-RUN apt install build-essential -y
+RUN apt-get update && apt install build-essential --fix-missing -y
 RUN wget --no-check-certificate https://dl.xpdfreader.com/xpdf-tools-linux-4.04.tar.gz &&  \
     tar -xvf xpdf-tools-linux-4.04.tar.gz && cp xpdf-tools-linux-4.04/bin64/pdftotext /usr/local/bin
 RUN apt-get install ffmpeg -y
