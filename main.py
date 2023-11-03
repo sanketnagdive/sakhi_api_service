@@ -91,6 +91,10 @@ class DropDownInputLanguage(str, Enum):
     en = "English"
     hi = "Hindi"
     gu = "Gujarati"
+    kn = "Kannada"
+    ml = "Malayalam"
+    ta = "Tamil"
+    te = "Telugu"
 
 def get_current_username(
     credentials: HTTPBasicCredentials = Depends(security)
