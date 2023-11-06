@@ -27,8 +27,12 @@ logger = logging.getLogger('jugalbandi_api')
 promptsInMemoryDomainQues = []
 promptsInMemoryTechQues = []
 
-
-
+score_language_mapping =  {
+    'en': 0.41,
+    'hi': 0.35,
+    'kn': 0.26
+}
+default_language = 'en'
 
 def langchain_indexing(uuid_number):
     sources = SimpleDirectoryReader(uuid_number, recursive=True).load_data()
@@ -294,7 +298,7 @@ def querying_with_langchain_gpt4_mcq(uuid_number, query, doCache):
             status_code = 422
         return None, None, None, error_message, status_code
 
-def querying_with_langchain_gpt3(uuid_number, query, converse: bool):
+def querying_with_langchain_gpt3(uuid_number, query, converse: bool, language = default_language):
     print("query ====>", query)
     load_dotenv()
     files_count = read_langchain_index_files(uuid_number)
@@ -303,7 +307,8 @@ def querying_with_langchain_gpt3(uuid_number, query, converse: bool):
             search_index = FAISS.load_local(uuid_number, OpenAIEmbeddings())
             documents = search_index.similarity_search_with_score(query, k=5)
             # contexts = [document.page_content for document in documents]
-            contexts =  [document.page_content for document, search_score in documents if search_score < 0.41]
+            score_threshold = score_language_mapping[language]
+            contexts =  [document.page_content for document, search_score in documents if search_score < score_threshold]
             print(str(documents))
             if not contexts:
                 return "I'm sorry, but I don't have enough information to provide a specific answer for your question. Please provide more information or context about what you are referring to.", None, None, None, 200
@@ -324,6 +329,7 @@ def querying_with_langchain_gpt3(uuid_number, query, converse: bool):
             
 
             system_rules = system_rules.format(context=contexts)
+            # print("system_rules ====> ",  system_rules)
             openai.api_key = os.environ["OPENAI_API_KEY"]
             res = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo-16k",
@@ -333,6 +339,10 @@ def querying_with_langchain_gpt3(uuid_number, query, converse: bool):
                 ],
             )
             response = res["choices"][0]["message"]["content"]
+            # print("response ====> ", response)
+            # f = open("response.txt", "w")
+            # f.write(str(response))
+            # f.close()
             return response, documents, None, None, 200
 
         except openai.error.RateLimitError as e:
@@ -349,8 +359,9 @@ def querying_with_langchain_gpt3(uuid_number, query, converse: bool):
         status_code = 422
     return "", None, None, error_message, status_code
 
-def get_source_markdown(documents, threshold = 0.41) -> str:
-    sources =  [document.metadata for document, search_score in documents if search_score < threshold]
+def get_source_markdown(documents, language = default_language) -> str:
+    score_threshold = score_language_mapping[language]
+    sources =  [document.metadata for document, search_score in documents if search_score < score_threshold]
     added_sources = []
     sources_markdown = '\n\nHere are some references links that you may enjoy: \n\n'
     counter = 1

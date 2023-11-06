@@ -250,7 +250,8 @@ async def query_with_voice_input(uuid_number: str, input_language: DropDownInput
         status_code = 422
     else:
         if query_text != "":
-            text, error_message = process_incoming_text(query_text, language)
+            # text, error_message = process_incoming_text(query_text, language)
+            text = query_text
             if output_format.name == "VOICE":
                 is_audio = True
         else:
@@ -259,12 +260,15 @@ async def query_with_voice_input(uuid_number: str, input_language: DropDownInput
             is_audio = True
 
         if text is not None:
-            answer, source_text, paraphrased_query, error_message, status_code = querying_with_langchain_gpt3(uuid_number, query_text, converse)
-            if source_text is None and language != 'en' and status_code == 200:
-                answer, source_text, paraphrased_query, error_message, status_code = querying_with_langchain_gpt3(uuid_number, text, converse)
+            print("regional language ====> ", query_text)
+            print("English language ====> ", text)
+            answer, source_text, paraphrased_query, error_message, status_code = querying_with_langchain_gpt3(uuid_number, text, converse, language)
+            # if source_text is None and language != 'en' and status_code == 200:
+            #     answer, source_text, paraphrased_query, error_message, status_code = querying_with_langchain_gpt3(uuid_number, text, converse)
             
             if len(answer) != 0:
-                regional_answer, error_message = process_outgoing_text(answer, language)
+                # regional_answer, error_message = process_outgoing_text(answer, language)
+                regional_answer = answer
                 if regional_answer is not None:
                     if is_audio:
                         output_file, error_message = process_outgoing_voice(regional_answer, language)
@@ -283,8 +287,8 @@ async def query_with_voice_input(uuid_number: str, input_language: DropDownInput
             status_code = 503
 
     if source_text is not None:
-        regional_answer = (regional_answer or "") + get_source_markdown(source_text)
-        answer = answer + get_source_markdown(source_text)
+        regional_answer = (regional_answer or "") + get_source_markdown(source_text, language)
+        answer = answer + get_source_markdown(source_text, language)
 
     engine = await create_engine()
     await insert_qa_voice_logs(engine=engine, uuid_number=uuid_number, input_language=input_language.value,
