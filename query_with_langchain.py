@@ -33,6 +33,16 @@ score_language_mapping =  {
     'kn': 0.26
 }
 default_language = 'en'
+source_default_msg = {
+    'en': "Here are some references links that you may enjoy:",
+    'hi': "यहां कुछ संदर्भ लिंक दिए गए हैं जिनका आप आनंद ले सकते हैं:",
+    'kn': "ನೀವು ಆನಂದಿಸಬಹುದಾದ ಕೆಲವು ಉಲ್ಲೇಖ ಲಿಂಕ್‌ಗಳು ಇಲ್ಲಿವೆ:"
+}
+search_default_msg  = {
+    'en': "I'm sorry, but I don't have enough information to provide a specific answer for your question. Please provide more information or context about what you are referring to.",
+    'hi': "मुझे खेद है, लेकिन आपके प्रश्न का विशिष्ट उत्तर देने के लिए मेरे पास पर्याप्त जानकारी नहीं है। आप जिस चीज़ का उल्लेख कर रहे हैं उसके बारे में कृपया अधिक जानकारी या संदर्भ प्रदान करें।",
+    'kn': "ನನ್ನನ್ನು ಕ್ಷಮಿಸಿ, ಆದರೆ ನಿಮ್ಮ ಪ್ರಶ್ನೆಗೆ ನಿರ್ದಿಷ್ಟ ಉತ್ತರವನ್ನು ಒದಗಿಸಲು ನನ್ನ ಬಳಿ ಸಾಕಷ್ಟು ಮಾಹಿತಿ ಇಲ್ಲ. ದಯವಿಟ್ಟು ನೀವು ಯಾವುದನ್ನು ಉಲ್ಲೇಖಿಸುತ್ತಿದ್ದೀರಿ ಎಂಬುದರ ಕುರಿತು ಹೆಚ್ಚಿನ ಮಾಹಿತಿ ಅಥವಾ ಸಂದರ್ಭವನ್ನು ಒದಗಿಸಿ."
+}
 
 def langchain_indexing(uuid_number):
     sources = SimpleDirectoryReader(uuid_number, recursive=True).load_data()
@@ -311,7 +321,7 @@ def querying_with_langchain_gpt3(uuid_number, query, converse: bool, language = 
             contexts =  [document.page_content for document, search_score in documents if search_score < score_threshold]
             print(str(documents))
             if not contexts:
-                return "I'm sorry, but I don't have enough information to provide a specific answer for your question. Please provide more information or context about what you are referring to.", None, None, None, 200
+                return search_default_msg[language], None, None, None, 200
             
             if not converse:
                 return "", documents, None, None, 200
@@ -363,7 +373,7 @@ def get_source_markdown(documents, language = default_language) -> str:
     score_threshold = score_language_mapping[language]
     sources =  [document.metadata for document, search_score in documents if search_score < score_threshold]
     added_sources = []
-    sources_markdown = '\n\nHere are some references links that you may enjoy: \n\n'
+    sources_markdown = f'\n\n{source_default_msg[language]} \n\n'
     counter = 1
     for data in sources:   
         if not data["identifier"] in added_sources:
