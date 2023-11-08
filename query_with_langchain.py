@@ -318,7 +318,7 @@ def querying_with_langchain_gpt3(uuid_number, query, converse: bool, language = 
             documents = search_index.similarity_search_with_score(query, k=5)
             # contexts = [document.page_content for document in documents]
             score_threshold = score_language_mapping[language]
-            contexts =  [document.page_content for document, search_score in documents if search_score < score_threshold]
+            contexts =  [document.page_content for document, search_score in documents if round(search_score, 2) <= score_threshold]
             print(str(documents))
             if not contexts:
                 return search_default_msg[language], None, None, None, 200
@@ -371,7 +371,7 @@ def querying_with_langchain_gpt3(uuid_number, query, converse: bool, language = 
 
 def get_source_markdown(documents, language = default_language) -> str:
     score_threshold = score_language_mapping[language]
-    sources =  [document.metadata for document, search_score in documents if search_score < score_threshold]
+    sources =  [document.metadata for document, search_score in documents if round(search_score, 2) <= score_threshold]
     added_sources = []
     sources_markdown = f'\n\n{source_default_msg[language]} \n\n'
     counter = 1
