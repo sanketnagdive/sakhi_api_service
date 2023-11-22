@@ -1,12 +1,15 @@
 import logging
 import openai
-from gpt_index import SimpleDirectoryReader
+from llama_index import SimpleDirectoryReader
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.docstore.document import Document
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
-from langchain import PromptTemplate, OpenAI, LLMChain
+from langchain.vectorstores.faiss import FAISS
+from langchain.prompts.prompt import PromptTemplate
+from langchain.llms.openai import OpenAI
+from langchain.chains.llm import LLMChain
+from langchain.vectorstores.utils import DistanceStrategy
 from cloud_storage import *
 import shutil
 import json
@@ -14,7 +17,7 @@ import csv
 from io import StringIO
 import time
 from dotenv import load_dotenv
-
+from openai import OpenAI
 
 log_format = '%(asctime)s - %(thread)d - %(threadName)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(
@@ -314,7 +317,7 @@ def querying_with_langchain_gpt3(uuid_number, query, converse: bool, language = 
     files_count = read_langchain_index_files(uuid_number)
     if files_count == 2:
         try:
-            search_index = FAISS.load_local(uuid_number, OpenAIEmbeddings())
+            search_index = FAISS.load_local(uuid_number, OpenAIEmbeddings(), distance_strategy = DistanceStrategy.COSINE)
             documents = search_index.similarity_search_with_score(query, k=5)
             # contexts = [document.page_content for document in documents]
             score_threshold = score_language_mapping[language]
@@ -340,25 +343,26 @@ def querying_with_langchain_gpt3(uuid_number, query, converse: bool, language = 
 
             system_rules = system_rules.format(context=contexts)
             # print("system_rules ====> ",  system_rules)
-            openai.api_key = os.environ["OPENAI_API_KEY"]
-            res = openai.ChatCompletion.create(
+            client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+            res = client.chat.completions.create(
                 model="gpt-3.5-turbo-16k",
                 messages=[
                     {"role": "system", "content": system_rules},
                     {"role": "user", "content": query},
                 ],
             )
-            response = res["choices"][0]["message"]["content"]
+            message = res.choices[0].message.model_dump()
+            response = message["content"]
             # print("response ====> ", response)
             # f = open("response.txt", "w")
             # f.write(str(response))
             # f.close()
             return response, documents, None, None, 200
 
-        except openai.error.RateLimitError as e:
+        except openai.RateLimitError as e:
             error_message = f"OpenAI API request exceeded rate limit: {e}"
             status_code = 500
-        except (openai.error.APIError, openai.error.ServiceUnavailableError):
+        except (openai.APIError, openai.InternalServerError):
             error_message = "Server is overloaded or unable to answer your request at the moment. Please try again later"
             status_code = 503
         except Exception as e:

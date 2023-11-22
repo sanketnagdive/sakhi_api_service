@@ -1,12 +1,18 @@
 import openai
-from gpt_index import GPTSimpleVectorIndex, SimpleDirectoryReader
+from llama_index import (
+    VectorStoreIndex,
+    SimpleDirectoryReader,
+    StorageContext,
+    load_index_from_storage,
+)
 from cloud_storage import *
 
 
 def querying_with_gptindex(uuid_number, query):
     files_count = read_given_file(uuid_number, "index.json")
     if files_count:
-        index = GPTSimpleVectorIndex.load_from_disk("index.json")
+        storage_context = StorageContext.from_defaults(persist_dir="./storage")
+        index = load_index_from_storage(storage_context)
         try:
             response = index.query(query)
             source_node = response.source_nodes
@@ -33,7 +39,8 @@ def querying_with_gptindex(uuid_number, query):
 def gpt_indexing(uuid_number):
     try:
         documents = SimpleDirectoryReader(uuid_number).load_data()
-        index = GPTSimpleVectorIndex(documents)
+        index = VectorStoreIndex().from_documents(documents)
+        index.storage_context.persist()
         index.save_to_disk("index.json")
         error_message = None
         status_code = 200

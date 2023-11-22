@@ -2,12 +2,13 @@ import requests
 import json
 import os.path
 import openai
-from gpt_index import SimpleDirectoryReader
+from llama_index import SimpleDirectoryReader
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.docstore.document import Document
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
+from langchain.vectorstores.faiss import FAISS
+from langchain.vectorstores.utils  import DistanceStrategy
 from cloud_storage import *
 import uuid
 
@@ -71,12 +72,12 @@ def extract_filename_from_url(url):
     return None
   return filename
 
-def download_pdf(url, save_path):
-    """Downloads a big PDF file from the given URL and saves it to the given filename.
+def download_file(url, save_path):
+    """Downloads a big file from the given URL and saves it to the given filename.
 
     Args:
-        url: The URL of the PDF file.
-        filename: The filename to save the PDF file to.
+        url: The URL of the file.
+        filename: The filename to save the file to.
     """
     try:
         response = requests.get(url, stream=True)
@@ -89,7 +90,7 @@ def download_pdf(url, save_path):
         print("Content downloaded and saved successfully. ===>" , save_path)
     except requests.exceptions.RequestException as e:
         print(f"Error: {e}")
-        print("Content downloaded and saved failed. ===>" , save_path)
+        print("Content downloade and save process failed. ===>" , save_path)
 
 def get_all_collection(): 
     url = "https://sunbirdsaas.com/api/content/v1/search"
@@ -126,14 +127,14 @@ def get_list_of_documents(contents):
 def langchain_indexing(uuid_number, documents):
     load_dotenv()
     try:
-        search_index = FAISS.from_documents(documents, OpenAIEmbeddings())
+        search_index = FAISS.from_documents(documents, OpenAIEmbeddings(), distance_strategy = DistanceStrategy.COSINE)
         search_index.save_local("")
         error_message = None
         status_code = 200
-    except openai.error.RateLimitError as e:
+    except openai.RateLimitError as e:
         error_message = f"OpenAI API request exceeded rate limit: {e}"
         status_code = 500
-    except (openai.error.APIError, openai.error.ServiceUnavailableError):
+    except (openai.APIError, openai.InternalServerError):
         error_message = "Server is overloaded or unable to answer your request at the moment. Please try again later"
         status_code = 503
     except Exception as e:
@@ -152,7 +153,7 @@ def main():
 
     # Get only the content which has "mimeType": "application/pdf"
     contents = get_metadata_of_children(identifiers)
-    print("Total PDf contents ::", len(contents))
+    print("Total contents ::", len(contents))
 
     # Create output directory if not exist
     output_dir_path = 'data/'
@@ -164,7 +165,7 @@ def main():
         # filesplit = os.path.splitext(filename)
         # filename = "data/content_{}.{}".format(index, filesplit[1])
         data["filepath"] = "data/" + filename
-        download_pdf(data["artifactUrl"], data["filepath"])
+        download_file(data["artifactUrl"], data["filepath"])
 
     print("Download process sucessfully completed!")
 
@@ -173,6 +174,9 @@ def main():
     # os.makedirs(uuid_number, exist_ok=True)
 
     documents = get_list_of_documents(contents)
+    f = open("jadupitara_documents.txt", "w")
+    f.write(str(documents))
+    f.close()
     langchain_indexing(uuid_number, documents)
 
     index_files = ["index.faiss", "index.pkl"]
