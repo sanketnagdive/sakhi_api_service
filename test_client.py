@@ -10,7 +10,7 @@ headers = {
 }
 
 # Send the GET request with the specified parameters and headers
-response = requests.get(url, params=params, headers=headers, stream=True)
+response = requests.get(url, params=params, headers=headers, stream=True, timeout=60)
 
 # Iterate through the response content as chunks are received
 for chunk in response.iter_content(chunk_size=None):
