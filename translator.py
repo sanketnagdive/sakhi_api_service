@@ -54,7 +54,7 @@ def is_url(string):
 def get_encoded_string(url):
     if is_url(url):
         local_filename = "local_file.mp3"
-        with requests.get(url) as r:
+        with requests.get(url, timeout=60) as r:
             with open(local_filename, 'wb') as f:
                 f.write(r.content)
     else:
@@ -115,7 +115,7 @@ def speech_to_text(encoded_string, input_language):
         'Content-Type': 'application/json'
     }
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.request("POST", url, headers=headers, data=payload, timeout=60)
     text = json.loads(response.text)[
         "pipelineResponse"][0]["output"][0]["source"]
     return text
@@ -169,7 +169,7 @@ def indic_translation(text, source, destination):
             'Content-Type': 'application/json'
         }
 
-        response = requests.request("POST", url, headers=headers, data=payload)
+        response = requests.request("POST", url, headers=headers, data=payload, timeout=60)
         indic_text = json.loads(response.text)["pipelineResponse"][0]["output"][0]["target"]
     except:
         indic_text = google_translate_text(text, source, destination)
@@ -231,7 +231,7 @@ def text_to_speech(language, text, gender='female'):
             'Content-Type': 'application/json'
         }
 
-        response = requests.request("POST", url, headers=headers, data=payload)
+        response = requests.request("POST", url, headers=headers, data=payload, timeout=60)
         audio_content = response.json(
         )["pipelineResponse"][0]['audio'][0]['audioContent']
         audio_content = base64.b64decode(audio_content)

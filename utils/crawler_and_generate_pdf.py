@@ -8,7 +8,7 @@ links_written = set()
 DOMAIN_END_POINT = ''
 
 def get_child_urls(url):
-    response = requests.get(url)
+    response = requests.get(url, timeout=60)
     soup = BeautifulSoup(response.text, 'html.parser')
     links_list = []
 
@@ -51,7 +51,7 @@ def read_from_sources(base_url, output_dir):
             print("Read from URL:", base_url + url)
 
             # get the content of URL
-            page = requests.get(base_url + url)
+            page = requests.get(base_url + url, timeout=60)
 
             # Creating BeautifulSoup object
             soup = BeautifulSoup(page.content, "html.parser")
