@@ -1,13 +1,13 @@
-import requests
 from bs4 import BeautifulSoup
 import os
+from security import safe_requests
 
 visited_links = set()
 links_written = set()
 DOMAIN_END_POINT = ''
 
 def get_child_urls(url):
-    response = requests.get(url, timeout=60)
+    response = safe_requests.get(url, timeout=60)
     soup = BeautifulSoup(response.text, 'html.parser')
     links_list = []
 
@@ -41,7 +41,7 @@ def read_from_sources(base_url):
             print("Read from URL:", base_url + url)
 
             # get the content of URL
-            page = requests.get(base_url + url, timeout=60)
+            page = safe_requests.get(base_url + url, timeout=60)
 
             # Creating BeautifulSoup object
             soup = BeautifulSoup(page.content, "html.parser")
