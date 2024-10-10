@@ -22,7 +22,7 @@ def transcribe_audio_using_whisper(audio_file, video_filename, output_directory)
     command = f"whisper {audio_file} --model tiny --language Hindi --output_dir {output_directory} --output_format txt"
     
     try:
-        subprocess.run(command, shell=True, check=True)
+        subprocess.run(command, shell=False, check=True)
 
         print(f"Done extracting text from audio {command} : for the video file {video_filename}")
     except subprocess.CalledProcessError as e:
