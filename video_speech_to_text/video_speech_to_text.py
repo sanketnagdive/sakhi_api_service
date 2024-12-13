@@ -2,6 +2,7 @@ import os
 import moviepy.editor as mp
 import subprocess
 import shutil
+from security import safe_command
 
 def extract_audio_from_video(video_file, audio_file):
     # Load the video
@@ -22,7 +23,7 @@ def transcribe_audio_using_whisper(audio_file, video_filename, output_directory)
     command = f"whisper {audio_file} --model tiny --language Hindi --output_dir {output_directory} --output_format txt"
     
     try:
-        subprocess.run(command, shell=True, check=True)
+        safe_command.run(subprocess.run, command, shell=True, check=True)
 
         print(f"Done extracting text from audio {command} : for the video file {video_filename}")
     except subprocess.CalledProcessError as e:
