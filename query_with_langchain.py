@@ -500,8 +500,8 @@ def csvDifferenceData(uuid_number: str, respMsg: str) -> str:
     new_questions = removeWhitespace(respMsg)[1:]
     new_questions = list(set(new_questions))
     if os.path.exists(output_file_path):
-        old_question_file = open(output_file_path, 'r')
-        old_questions = removeWhitespace(old_question_file.read())
+        with open(output_file_path, 'r') as old_question_file:
+            old_questions = removeWhitespace(old_question_file.read())
         output = string_compare_diff(new_questions, old_questions)
         with open(output_file_path, "a") as file:
             file.write("\n")
