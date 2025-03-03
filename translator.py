@@ -5,6 +5,7 @@ import requests
 from pydub import AudioSegment
 from google.cloud import texttospeech, speech, translate
 from urllib.parse import urlparse
+from security import safe_requests
 
 asr_mapping = {
     "bn": "ai4bharat/conformer-multilingual-indo_aryan-gpu--t4",
@@ -54,7 +55,7 @@ def is_url(string):
 def get_encoded_string(url):
     if is_url(url):
         local_filename = "local_file.mp3"
-        with requests.get(url, timeout=60) as r:
+        with safe_requests.get(url, timeout=60) as r:
             with open(local_filename, 'wb') as f:
                 f.write(r.content)
     else:

@@ -10,6 +10,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from cloud_storage import *
 import uuid
+from security import safe_requests
 
 def make_post_api_request(url, headers, data):
     response = requests.post(url, headers=headers, data=json.dumps(data), timeout=60)
@@ -17,7 +18,7 @@ def make_post_api_request(url, headers, data):
     return response.json()
 
 def make_get_api_request(url, headers, data):
-    response = requests.get(url, headers=headers, data=json.dumps(data), timeout=60)
+    response = safe_requests.get(url, headers=headers, data=json.dumps(data), timeout=60)
     response.raise_for_status()
     return response.json()
 
@@ -79,7 +80,7 @@ def download_pdf(url, save_path):
         filename: The filename to save the PDF file to.
     """
     try:
-        response = requests.get(url, stream=True, timeout=60)
+        response = safe_requests.get(url, stream=True, timeout=60)
         response.raise_for_status()
         
         with open(save_path, 'wb') as pdf_file:
