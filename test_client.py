@@ -1,4 +1,4 @@
-import requests
+from security import safe_requests
 
 url = 'http://127.0.0.1:8000/query-with-langchain-gpt4_streaming'
 params = {
@@ -10,7 +10,7 @@ headers = {
 }
 
 # Send the GET request with the specified parameters and headers
-response = requests.get(url, params=params, headers=headers, stream=True, timeout=60)
+response = safe_requests.get(url, params=params, headers=headers, stream=True, timeout=60)
 
 # Iterate through the response content as chunks are received
 for chunk in response.iter_content(chunk_size=None):
